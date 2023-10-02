@@ -1,0 +1,37 @@
+pipeline {
+    agent any
+
+    stages {
+         stage('checkout project') {
+            steps {
+              checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: '', url: 'https://github.com/sharmajeetesh/Demo_Project1.git']]) 
+            }
+        }
+        stage('project build') {
+            steps {
+                sh '''
+                cd demo
+             mvn clean install
+             '''
+            }
+        }
+        stage('docker image create') {
+            steps {
+                sh '''
+                docker ps
+                cd demo
+                docker build -t sharmajeetesh/newrepo:2 . 
+                docker ps
+                '''
+            }
+        }
+         stage('docker push image') {
+            steps {
+                withDockerRegistry(credentialsId: 'docker-login', url: 'https://index.docker.io/v1/') {
+             sh "docker push sharmajeetesh/newrepo:2"
+                
+            }
+        }
+    }
+    }
+}
